@@ -1,0 +1,93 @@
+#include "DHT.h"
+#define DHTPIN 2     // Pino digital sensor DHT
+
+// Escolha o tipo de sensor!
+# define DHTTYPE DHT11     // DHT 11
+//# define DHTTYPE DHT22   // DHT 22 (AM2302), AM2321
+//# define DHTTYPE DHT21   // DHT 21 (AM2301)
+
+DHT dht(DHTPIN, DHTTYPE);
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// Definir o endereço do LCD para 0x27 para um display de 16 caracteres e 2 linhas
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+
+void setup() {
+  pinMode(7,OUTPUT);
+  Serial.begin(9600);
+  Serial.println(F("DHTxx teste!"));
+
+  dht.begin();
+
+  lcd.init(); 
+  lcd.clear();
+//digitalWrite(7,HIGH);
+  lcd.setBacklight(HIGH);
+  lcd.setCursor(0, 0);
+  lcd.print(F("    DRYPAPER"));
+  delay(2000);
+  lcd.setCursor(0, 1);
+  lcd.print(F("  Aspark Group"));
+  delay(5000);
+  lcd.clear();
+}
+
+void loop() {
+  
+   Serial.println(analogRead(A0));
+
+  if(analogRead(A0)>700){
+   Serial.print("rafael eh o cara :");
+   lcd.setBacklight(LOW);
+   digitalWrite(7, HIGH);
+
+
+  }else{
+    digitalWrite(7, LOW);
+  // turn relay OFF
+  //delay(5000);// keep it OFF for 5 seconds
+
+  float h = dht.readHumidity();
+  // Temperature em Celsius (default)
+  float t = dht.readTemperature();
+
+  // Verifique se alguma leitura falhou e tenta novamente.
+  if (isnan(h) || isnan(t)) {
+    Serial.println(F("Falha de leitura do sensor DHT!"));
+    return;
+  }
+  // Compute heat index in Celsius (isFahreheit = false)
+  float hic = dht.computeHeatIndex(t, h, false);
+
+  Serial.print(F("Umidade: "));
+  Serial.print(h);
+  Serial.print(F("%  Temperatura: "));
+  Serial.print(t);
+  Serial.print(F("°C "));
+
+  lcd.setBacklight(HIGH);
+
+  lcd.setCursor(0, 0);
+  lcd.print(F("Temperatura: "));
+  lcd.setCursor(12, 0);
+  lcd.print(round(t));
+  lcd.setCursor(14, 0);
+  lcd.write(223); // Caractere °
+  lcd.print(F("C"));
+  delay(2000);
+
+  lcd.setCursor(0, 1);
+  lcd.print(F("Humidade: "));
+  lcd.setCursor(10, 1);
+  lcd.print(round(h));
+  lcd.setCursor(12, 1);
+  lcd.print(F(" %"));
+  delay(100);
+  }
+  delay(1000);
+    
+
+}
